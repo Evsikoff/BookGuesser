@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Layout } from './components/Layout';
 import { BookOption } from './components/BookOption';
@@ -114,16 +113,16 @@ const App: React.FC = () => {
           <div className="w-20 h-20 bg-amber-50 text-amber-700 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6 shadow-inner">
             <i className="fa-solid fa-crown"></i>
           </div>
-          <h2 className="text-2xl font-bold text-stone-800 mb-4 serif">РџРѕР·РґСЂР°РІР»СЏРµРј!</h2>
+          <h2 className="text-2xl font-bold text-stone-800 mb-4 serif">Поздравляем!</h2>
           <p className="text-stone-600 mb-8 leading-relaxed">
-            Р’С‹ РѕС‚РІРµС‚РёР»Рё РїСЂР°РІРёР»СЊРЅРѕ РЅР° РІСЃРµ СЃР»РѕР¶РЅС‹Рµ РѕС‚СЂС‹РІРєРё. Р’РѕРїСЂРѕСЃС‹ Р·Р°РєРѕРЅС‡РёР»РёСЃСЊ.
-            Р’С‹ РѕС‚РєСЂС‹Р»Рё {solvedParagraphIds.length} / {paragraphs.length} РїСЂРѕРёР·РІРµРґРµРЅРёР№.
+            Вы ответили правильно на все сложные отрывки. Вопросы закончились.
+            Вы открыли {solvedParagraphIds.length} / {paragraphs.length} произведений.
           </p>
           <button
             onClick={resetProgress}
             className="w-full bg-stone-800 hover:bg-stone-900 text-white font-bold py-4 px-8 rounded-2xl transition-all shadow-lg hover:shadow-xl active:scale-95"
           >
-            РРіСЂР°С‚СЊ Р·Р°РЅРѕРІРѕ
+            Играть заново
           </button>
         </div>
       )}
