@@ -1,9 +1,12 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Layout } from './components/Layout';
 import { BookOption } from './components/BookOption';
 import { fetchBookQuestion } from './services/geminiService';
 import { Question, Book, GameStatus } from './types';
+import { paragraphs } from './data/paragraphs';
+
+const STORAGE_KEY = "bookguesser.correctParagraphIds";
 
 const App: React.FC = () => {
   const [status, setStatus] = useState<GameStatus>(GameStatus.IDLE);
@@ -12,13 +15,33 @@ const App: React.FC = () => {
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [solvedParagraphIds, setSolvedParagraphIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((item) => typeof item === "string");
+    } catch {
+      return [];
+    }
+  });
+
+  const persistSolvedParagraphIds = useCallback((ids: string[]) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  }, [solvedParagraphIds]);
 
   const startNewRound = useCallback(async () => {
     setStatus(GameStatus.LOADING);
     setSelectedBook(null);
     setError(null);
     try {
-      const question = await fetchBookQuestion();
+      const question = await fetchBookQuestion(solvedParagraphIds);
+      if (!question) {
+        setCurrentQuestion(null);
+        setStatus(GameStatus.COMPLETED);
+        return;
+      }
       setCurrentQuestion(question);
       setStatus(GameStatus.PLAYING);
     } catch (err) {
@@ -37,12 +60,28 @@ const App: React.FC = () => {
     if (isCorrect) {
       setScore(prev => prev + 100 + (streak * 25));
       setStreak(prev => prev + 1);
+      setSolvedParagraphIds((prev) => {
+        if (prev.includes(currentQuestion.paragraphId)) return prev;
+        const next = [...prev, currentQuestion.paragraphId];
+        persistSolvedParagraphIds(next);
+        return next;
+      });
     } else {
       setStreak(0);
     }
     
     setStatus(GameStatus.RESULT);
   };
+
+  const resetProgress = useCallback(() => {
+    setSolvedParagraphIds([]);
+    persistSolvedParagraphIds([]);
+    setScore(0);
+    setStreak(0);
+    setSelectedBook(null);
+    setCurrentQuestion(null);
+    setStatus(GameStatus.IDLE);
+  }, [persistSolvedParagraphIds]);
 
   const isSelected = (book: Book) => selectedBook?.id === book.id;
   const isCorrect = (book: Book) => currentQuestion?.correctBook.id === book.id;
@@ -67,6 +106,25 @@ const App: React.FC = () => {
             Войти в библиотеку
           </button>
           {error && <p className="mt-4 text-red-500 text-sm font-medium">{error}</p>}
+        </div>
+      )}
+
+      {status === GameStatus.COMPLETED && (
+        <div className="bg-white p-8 rounded-3xl shadow-xl border border-stone-100 text-center max-w-xl mx-auto">
+          <div className="w-20 h-20 bg-amber-50 text-amber-700 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6 shadow-inner">
+            <i className="fa-solid fa-crown"></i>
+          </div>
+          <h2 className="text-2xl font-bold text-stone-800 mb-4 serif">РџРѕР·РґСЂР°РІР»СЏРµРј!</h2>
+          <p className="text-stone-600 mb-8 leading-relaxed">
+            Р’С‹ РѕС‚РІРµС‚РёР»Рё РїСЂР°РІРёР»СЊРЅРѕ РЅР° РІСЃРµ СЃР»РѕР¶РЅС‹Рµ РѕС‚СЂС‹РІРєРё. Р’РѕРїСЂРѕСЃС‹ Р·Р°РєРѕРЅС‡РёР»РёСЃСЊ.
+            Р’С‹ РѕС‚РєСЂС‹Р»Рё {solvedParagraphIds.length} / {paragraphs.length} РїСЂРѕРёР·РІРµРґРµРЅРёР№.
+          </p>
+          <button
+            onClick={resetProgress}
+            className="w-full bg-stone-800 hover:bg-stone-900 text-white font-bold py-4 px-8 rounded-2xl transition-all shadow-lg hover:shadow-xl active:scale-95"
+          >
+            РРіСЂР°С‚СЊ Р·Р°РЅРѕРІРѕ
+          </button>
         </div>
       )}
 

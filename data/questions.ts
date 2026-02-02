@@ -12,9 +12,16 @@ const getBookOrThrow = (bookId: string): Book => {
   return book;
 };
 
-export function getRandomQuestion(): Question {
-  const randomIndex = Math.floor(Math.random() * paragraphs.length);
-  const paragraph = paragraphs[randomIndex];
+export function getRandomQuestion(excludeParagraphIds: string[] = []): Question | null {
+  const excluded = new Set(excludeParagraphIds);
+  const availableParagraphs = paragraphs.filter((item) => !excluded.has(item.id));
+
+  if (availableParagraphs.length === 0) {
+    return null;
+  }
+
+  const randomIndex = Math.floor(Math.random() * availableParagraphs.length);
+  const paragraph = availableParagraphs[randomIndex];
 
   const correctBook = getBookOrThrow(paragraph.bookId);
   const distractors = paragraph.distractorBookIds.map(getBookOrThrow);
@@ -24,6 +31,7 @@ export function getRandomQuestion(): Question {
     .slice(0, 20);
 
   return {
+    paragraphId: paragraph.id,
     paragraph: paragraph.text,
     correctBook,
     options

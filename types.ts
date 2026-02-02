@@ -13,6 +13,7 @@ export interface Paragraph {
 }
 
 export interface Question {
+  paragraphId: string;
   paragraph: string;
   correctBook: Book;
   options: Book[];
@@ -23,5 +24,6 @@ export enum GameStatus {
   LOADING = 'LOADING',
   PLAYING = 'PLAYING',
   RESULT = 'RESULT',
-  GAMEOVER = 'GAMEOVER'
+  GAMEOVER = 'GAMEOVER',
+  COMPLETED = 'COMPLETED'
 }
