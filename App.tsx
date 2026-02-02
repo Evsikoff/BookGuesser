@@ -29,7 +29,7 @@ const App: React.FC = () => {
 
   const persistSolvedParagraphIds = useCallback((ids: string[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-  }, [solvedParagraphIds]);
+  }, []);
 
   const startNewRound = useCallback(async () => {
     setStatus(GameStatus.LOADING);
@@ -49,7 +49,7 @@ const App: React.FC = () => {
       setError("Не удалось связаться с литературными архивами. Пожалуйста, попробуйте снова.");
       setStatus(GameStatus.IDLE);
     }
-  }, []);
+  }, [solvedParagraphIds]);
 
   const handleSelect = (book: Book) => {
     if (status !== GameStatus.PLAYING || !currentQuestion) return;
