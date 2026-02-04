@@ -19,6 +19,11 @@ export interface Question {
   options: Book[];
 }
 
+export interface FailedQuestion {
+  paragraphId: string;
+  failedAt: number; // timestamp
+}
+
 export enum GameStatus {
   IDLE = 'IDLE',
   LOADING = 'LOADING',

@@ -2,10 +2,11 @@ import React, { useState, useCallback } from 'react';
 import { Layout } from './components/Layout';
 import { BookOption } from './components/BookOption';
 import { fetchBookQuestion } from './services/geminiService';
-import { Question, Book, GameStatus } from './types';
+import { Question, Book, GameStatus, FailedQuestion } from './types';
 import { paragraphs } from './data/paragraphs';
 
 const STORAGE_KEY = "bookguesser.correctParagraphIds";
+const FAILED_STORAGE_KEY = "bookguesser.failedQuestions";
 
 const App: React.FC = () => {
   const [status, setStatus] = useState<GameStatus>(GameStatus.IDLE);
@@ -26,8 +27,30 @@ const App: React.FC = () => {
     }
   });
 
+  const [failedQuestions, setFailedQuestions] = useState<FailedQuestion[]>(() => {
+    try {
+      const raw = localStorage.getItem(FAILED_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(
+        (item) =>
+          typeof item === "object" &&
+          item !== null &&
+          typeof item.paragraphId === "string" &&
+          typeof item.failedAt === "number"
+      );
+    } catch {
+      return [];
+    }
+  });
+
   const persistSolvedParagraphIds = useCallback((ids: string[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  }, []);
+
+  const persistFailedQuestions = useCallback((questions: FailedQuestion[]) => {
+    localStorage.setItem(FAILED_STORAGE_KEY, JSON.stringify(questions));
   }, []);
 
   const startNewRound = useCallback(async () => {
@@ -35,7 +58,7 @@ const App: React.FC = () => {
     setSelectedBook(null);
     setError(null);
     try {
-      const question = await fetchBookQuestion(solvedParagraphIds);
+      const question = await fetchBookQuestion(solvedParagraphIds, failedQuestions);
       if (!question) {
         setCurrentQuestion(null);
         setStatus(GameStatus.COMPLETED);
@@ -48,14 +71,14 @@ const App: React.FC = () => {
       setError("Не удалось связаться с литературными архивами. Пожалуйста, попробуйте снова.");
       setStatus(GameStatus.IDLE);
     }
-  }, [solvedParagraphIds]);
+  }, [solvedParagraphIds, failedQuestions]);
 
   const handleSelect = (book: Book) => {
     if (status !== GameStatus.PLAYING || !currentQuestion) return;
-    
+
     setSelectedBook(book);
     const isCorrect = book.id === currentQuestion.correctBook.id;
-    
+
     if (isCorrect) {
       setScore(prev => prev + 100 + (streak * 25));
       setStreak(prev => prev + 1);
@@ -65,22 +88,51 @@ const App: React.FC = () => {
         persistSolvedParagraphIds(next);
         return next;
       });
+      // Удалить из проваленных, если вопрос был там
+      setFailedQuestions((prev) => {
+        const filtered = prev.filter((f) => f.paragraphId !== currentQuestion.paragraphId);
+        if (filtered.length !== prev.length) {
+          persistFailedQuestions(filtered);
+        }
+        return filtered;
+      });
     } else {
       setStreak(0);
+      // Добавить или обновить в проваленных с новой датой
+      setFailedQuestions((prev) => {
+        const now = Date.now();
+        const existing = prev.find((f) => f.paragraphId === currentQuestion.paragraphId);
+        let next: FailedQuestion[];
+        if (existing) {
+          // Обновить дату провала
+          next = prev.map((f) =>
+            f.paragraphId === currentQuestion.paragraphId
+              ? { ...f, failedAt: now }
+              : f
+          );
+        } else {
+          // Добавить новый провал
+          next = [...prev, { paragraphId: currentQuestion.paragraphId, failedAt: now }];
+        }
+        persistFailedQuestions(next);
+        return next;
+      });
     }
-    
+
     setStatus(GameStatus.RESULT);
   };
 
   const resetProgress = useCallback(() => {
     setSolvedParagraphIds([]);
     persistSolvedParagraphIds([]);
+    setFailedQuestions([]);
+    persistFailedQuestions([]);
     setScore(0);
     setStreak(0);
     setSelectedBook(null);
     setCurrentQuestion(null);
     setStatus(GameStatus.IDLE);
-  }, [persistSolvedParagraphIds]);
+  }, [persistSolvedParagraphIds, persistFailedQuestions]);
 
   const isSelected = (book: Book) => selectedBook?.id === book.id;
   const isCorrect = (book: Book) => currentQuestion?.correctBook.id === book.id;

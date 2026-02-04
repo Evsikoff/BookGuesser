@@ -1,4 +1,4 @@
-import { Book, Question } from "../types";
+import { Book, Question, FailedQuestion } from "../types";
 import { books } from "./books";
 import { paragraphs } from "./paragraphs";
 
@@ -12,16 +12,11 @@ const getBookOrThrow = (bookId: string): Book => {
   return book;
 };
 
-export function getRandomQuestion(excludeParagraphIds: string[] = []): Question | null {
-  const excluded = new Set(excludeParagraphIds);
-  const availableParagraphs = paragraphs.filter((item) => !excluded.has(item.id));
-
-  if (availableParagraphs.length === 0) {
-    return null;
+function buildQuestion(paragraphId: string): Question {
+  const paragraph = paragraphs.find((p) => p.id === paragraphId);
+  if (!paragraph) {
+    throw new Error(`Unknown paragraph id: ${paragraphId}`);
   }
-
-  const randomIndex = Math.floor(Math.random() * availableParagraphs.length);
-  const paragraph = availableParagraphs[randomIndex];
 
   const correctBook = getBookOrThrow(paragraph.bookId);
   const distractors = paragraph.distractorBookIds.map(getBookOrThrow);
@@ -36,4 +31,33 @@ export function getRandomQuestion(excludeParagraphIds: string[] = []): Question 
     correctBook,
     options
   };
+}
+
+export function getRandomQuestion(
+  solvedParagraphIds: string[] = [],
+  failedQuestions: FailedQuestion[] = []
+): Question | null {
+  const solvedSet = new Set(solvedParagraphIds);
+  const failedSet = new Set(failedQuestions.map((f) => f.paragraphId));
+
+  // 1. Найти отрывки, которые ещё не были показаны пользователю
+  const unseenParagraphs = paragraphs.filter(
+    (item) => !solvedSet.has(item.id) && !failedSet.has(item.id)
+  );
+
+  if (unseenParagraphs.length > 0) {
+    // Выбрать случайный из непоказанных
+    const randomIndex = Math.floor(Math.random() * unseenParagraphs.length);
+    return buildQuestion(unseenParagraphs[randomIndex].id);
+  }
+
+  // 2. Все отрывки были показаны, выбрать из проваленных
+  // тот, на который ошиблись раньше всего
+  if (failedQuestions.length > 0) {
+    const sorted = [...failedQuestions].sort((a, b) => a.failedAt - b.failedAt);
+    return buildQuestion(sorted[0].paragraphId);
+  }
+
+  // 3. Всё решено, вопросов больше нет
+  return null;
 }
