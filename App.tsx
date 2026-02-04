@@ -1,12 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import { Layout } from './components/Layout';
 import { BookOption } from './components/BookOption';
+import { BookAutocomplete } from './components/BookAutocomplete';
 import { fetchBookQuestion } from './services/geminiService';
 import { Question, Book, GameStatus, FailedQuestion } from './types';
 import { paragraphs } from './data/paragraphs';
 
 const STORAGE_KEY = "bookguesser.correctParagraphIds";
 const FAILED_STORAGE_KEY = "bookguesser.failedQuestions";
+const QUESTION_COUNT_KEY = "bookguesser.questionCount";
 
 const App: React.FC = () => {
   const [status, setStatus] = useState<GameStatus>(GameStatus.IDLE);
@@ -15,6 +17,15 @@ const App: React.FC = () => {
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [questionCount, setQuestionCount] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem(QUESTION_COUNT_KEY);
+      return raw ? parseInt(raw, 10) || 0 : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [isOpenQuestion, setIsOpenQuestion] = useState(false);
   const [solvedParagraphIds, setSolvedParagraphIds] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -64,6 +75,10 @@ const App: React.FC = () => {
         setStatus(GameStatus.COMPLETED);
         return;
       }
+      const nextCount = questionCount + 1;
+      setQuestionCount(nextCount);
+      localStorage.setItem(QUESTION_COUNT_KEY, String(nextCount));
+      setIsOpenQuestion(nextCount % 5 === 0);
       setCurrentQuestion(question);
       setStatus(GameStatus.PLAYING);
     } catch (err) {
@@ -71,7 +86,7 @@ const App: React.FC = () => {
       setError("Не удалось связаться с литературными архивами. Пожалуйста, попробуйте снова.");
       setStatus(GameStatus.IDLE);
     }
-  }, [solvedParagraphIds, failedQuestions]);
+  }, [solvedParagraphIds, failedQuestions, questionCount]);
 
   const handleSelect = (book: Book) => {
     if (status !== GameStatus.PLAYING || !currentQuestion) return;
@@ -80,7 +95,9 @@ const App: React.FC = () => {
     const isCorrect = book.id === currentQuestion.correctBook.id;
 
     if (isCorrect) {
-      setScore(prev => prev + 100 + (streak * 25));
+      const basePoints = 100 + (streak * 25);
+      const points = isOpenQuestion ? basePoints * 3 : basePoints;
+      setScore(prev => prev + points);
       setStreak(prev => prev + 1);
       setSolvedParagraphIds((prev) => {
         if (prev.includes(currentQuestion.paragraphId)) return prev;
@@ -127,6 +144,9 @@ const App: React.FC = () => {
     persistSolvedParagraphIds([]);
     setFailedQuestions([]);
     persistFailedQuestions([]);
+    setQuestionCount(0);
+    localStorage.setItem(QUESTION_COUNT_KEY, "0");
+    setIsOpenQuestion(false);
     setScore(0);
     setStreak(0);
     setSelectedBook(null);
@@ -194,40 +214,69 @@ const App: React.FC = () => {
 
       {(status === GameStatus.PLAYING || status === GameStatus.RESULT) && currentQuestion && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center bg-white px-6 py-3 rounded-2xl shadow-sm border border-stone-100">
+          <div className={`flex justify-between items-center px-6 py-3 rounded-2xl shadow-sm border ${isOpenQuestion ? 'bg-amber-50 border-amber-200' : 'bg-white border-stone-100'}`}>
             <div className="flex items-center gap-2">
               <span className="text-stone-400 font-bold uppercase tracking-widest text-xs">Счет</span>
               <span className="text-xl font-bold text-stone-800">{score}</span>
             </div>
-            {streak > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 rounded-full border border-amber-100">
-                <i className="fa-solid fa-fire text-amber-600 text-xs"></i>
-                <span className="text-amber-800 font-bold text-xs">СЕРИЯ: {streak}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              {isOpenQuestion && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-amber-200 rounded-full border border-amber-300">
+                  <i className="fa-solid fa-star text-amber-700 text-xs"></i>
+                  <span className="text-amber-900 font-bold text-xs">x3 ОЧКОВ</span>
+                </div>
+              )}
+              {streak > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 rounded-full border border-amber-100">
+                  <i className="fa-solid fa-fire text-amber-600 text-xs"></i>
+                  <span className="text-amber-800 font-bold text-xs">СЕРИЯ: {streak}</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="bg-white p-8 sm:p-12 rounded-3xl shadow-lg border border-stone-100 relative overflow-hidden group">
+          <div className={`p-8 sm:p-12 rounded-3xl shadow-lg relative overflow-hidden group ${isOpenQuestion ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200' : 'bg-white border border-stone-100'}`}>
+            {isOpenQuestion && (
+              <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1 bg-amber-500 text-white rounded-full text-xs font-bold shadow-md">
+                <i className="fa-solid fa-lightbulb"></i>
+                <span>ОТКРЫТЫЙ ВОПРОС</span>
+              </div>
+            )}
             <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none transition-transform group-hover:scale-110 duration-700">
-              <i className="fa-solid fa-quote-right text-9xl"></i>
+              <i className={`fa-solid ${isOpenQuestion ? 'fa-brain' : 'fa-quote-right'} text-9xl`}></i>
             </div>
-            <p className="serif text-xl sm:text-2xl text-stone-800 leading-relaxed relative z-10 first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:text-amber-800 italic">
+            <p className={`serif text-xl sm:text-2xl text-stone-800 leading-relaxed relative z-10 first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left italic ${isOpenQuestion ? 'first-letter:text-amber-600 mt-8' : 'first-letter:text-amber-800'}`}>
               {currentQuestion.paragraph}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {currentQuestion.options.map((book, idx) => (
-              <BookOption
-                key={`${book.id}-${idx}`}
-                book={book}
-                onClick={() => handleSelect(book)}
+          {isOpenQuestion ? (
+            <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-amber-200">
+              <p className="text-stone-600 mb-4 text-sm font-medium">
+                <i className="fa-solid fa-keyboard mr-2 text-amber-600"></i>
+                Введите название книги или имя автора для поиска:
+              </p>
+              <BookAutocomplete
+                onSelect={handleSelect}
                 disabled={status === GameStatus.RESULT}
-                isSelected={isSelected(book)}
-                isCorrect={isCorrect(book)}
+                selectedBook={selectedBook}
+                correctBook={currentQuestion.correctBook}
               />
-            ))}
-          </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {currentQuestion.options.map((book, idx) => (
+                <BookOption
+                  key={`${book.id}-${idx}`}
+                  book={book}
+                  onClick={() => handleSelect(book)}
+                  disabled={status === GameStatus.RESULT}
+                  isSelected={isSelected(book)}
+                  isCorrect={isCorrect(book)}
+                />
+              ))}
+            </div>
+          )}
 
           {status === GameStatus.RESULT && (
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-stone-200 flex flex-col items-center animate-slide-up z-50">
