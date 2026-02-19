@@ -1,14 +1,54 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { BookOption } from './components/BookOption';
 import { BookAutocomplete } from './components/BookAutocomplete';
 import { fetchBookQuestion } from './services/geminiService';
 import { Question, Book, GameStatus, FailedQuestion } from './types';
 import { paragraphs } from './data/paragraphs';
+import { initYSDK, initPlayer, getSDK, getPlayerInstance } from './services/ysdkService';
 
 const STORAGE_KEY = "bookguesser.correctParagraphIds";
 const FAILED_STORAGE_KEY = "bookguesser.failedQuestions";
 const QUESTION_COUNT_KEY = "bookguesser.questionCount";
+
+function loadFromLocalStorage() {
+  let solvedParagraphIds: string[] = [];
+  let failedQuestions: FailedQuestion[] = [];
+  let questionCount = 0;
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        solvedParagraphIds = parsed.filter((item) => typeof item === "string");
+      }
+    }
+  } catch { /* ignore */ }
+
+  try {
+    const raw = localStorage.getItem(FAILED_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        failedQuestions = parsed.filter(
+          (item) =>
+            typeof item === "object" &&
+            item !== null &&
+            typeof item.paragraphId === "string" &&
+            typeof item.failedAt === "number"
+        );
+      }
+    }
+  } catch { /* ignore */ }
+
+  try {
+    const raw = localStorage.getItem(QUESTION_COUNT_KEY);
+    if (raw) questionCount = parseInt(raw, 10) || 0;
+  } catch { /* ignore */ }
+
+  return { solvedParagraphIds, failedQuestions, questionCount };
+}
 
 const App: React.FC = () => {
   const [status, setStatus] = useState<GameStatus>(GameStatus.IDLE);
@@ -17,51 +57,122 @@ const App: React.FC = () => {
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [questionCount, setQuestionCount] = useState<number>(() => {
-    try {
-      const raw = localStorage.getItem(QUESTION_COUNT_KEY);
-      return raw ? parseInt(raw, 10) || 0 : 0;
-    } catch {
-      return 0;
-    }
-  });
+  const [questionCount, setQuestionCount] = useState(0);
   const [isOpenQuestion, setIsOpenQuestion] = useState(false);
-  const [solvedParagraphIds, setSolvedParagraphIds] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return [];
-      return parsed.filter((item) => typeof item === "string");
-    } catch {
-      return [];
-    }
-  });
+  const [solvedParagraphIds, setSolvedParagraphIds] = useState<string[]>([]);
+  const [failedQuestions, setFailedQuestions] = useState<FailedQuestion[]>([]);
+  // uiBlocked=true until SDK initialises and LoadingAPI.ready() is called
+  const [uiBlocked, setUiBlocked] = useState(true);
 
-  const [failedQuestions, setFailedQuestions] = useState<FailedQuestion[]>(() => {
-    try {
-      const raw = localStorage.getItem(FAILED_STORAGE_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return [];
-      return parsed.filter(
-        (item) =>
-          typeof item === "object" &&
-          item !== null &&
-          typeof item.paragraphId === "string" &&
-          typeof item.failedAt === "number"
-      );
-    } catch {
-      return [];
-    }
-  });
+  // Count every book selection to show a fullscreen ad every 4th time
+  const selectionCountRef = useRef(0);
 
-  const persistSolvedParagraphIds = useCallback((ids: string[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  // Initialize SDK, load cloud data (with localStorage fallback), then signal ready
+  useEffect(() => {
+    const initialize = async () => {
+      const ysdk = await initYSDK();
+      let loadedData = loadFromLocalStorage();
+
+      if (ysdk) {
+        const player = await initPlayer(ysdk);
+        if (player) {
+          try {
+            const cloudData = await player.getData([
+              'solvedParagraphIds',
+              'failedQuestions',
+              'questionCount',
+            ]);
+
+            const hasCloudData =
+              cloudData.solvedParagraphIds !== undefined ||
+              cloudData.failedQuestions !== undefined ||
+              cloudData.questionCount !== undefined;
+
+            if (hasCloudData) {
+              const cloudSolved = cloudData.solvedParagraphIds;
+              const cloudFailed = cloudData.failedQuestions;
+              const cloudCount = cloudData.questionCount;
+
+              loadedData = {
+                solvedParagraphIds: Array.isArray(cloudSolved)
+                  ? (cloudSolved as unknown[]).filter(
+                      (i): i is string => typeof i === 'string'
+                    )
+                  : loadedData.solvedParagraphIds,
+                failedQuestions: Array.isArray(cloudFailed)
+                  ? (cloudFailed as unknown[]).filter(
+                      (i): i is FailedQuestion =>
+                        typeof i === 'object' &&
+                        i !== null &&
+                        typeof (i as FailedQuestion).paragraphId === 'string' &&
+                        typeof (i as FailedQuestion).failedAt === 'number'
+                    )
+                  : loadedData.failedQuestions,
+                questionCount:
+                  typeof cloudCount === 'number'
+                    ? cloudCount
+                    : loadedData.questionCount,
+              };
+            }
+          } catch (e) {
+            console.error('Failed to load cloud data:', e);
+          }
+        }
+      }
+
+      setSolvedParagraphIds(loadedData.solvedParagraphIds);
+      setFailedQuestions(loadedData.failedQuestions);
+      setQuestionCount(loadedData.questionCount);
+
+      // Block UI, signal that game is ready to Yandex, then unblock
+      setUiBlocked(true);
+      if (ysdk) {
+        try {
+          // Read language (e.g. 'ru') – apply to document if needed
+          const lang = ysdk.environment.i18n.lang;
+          if (lang) {
+            document.documentElement.lang = lang;
+          }
+          ysdk.features.LoadingAPI.ready();
+        } catch (e) {
+          console.error('LoadingAPI.ready error:', e);
+        }
+      }
+      setUiBlocked(false);
+    };
+
+    initialize().catch((e) => {
+      console.error('SDK initialization error:', e);
+      const loadedData = loadFromLocalStorage();
+      setSolvedParagraphIds(loadedData.solvedParagraphIds);
+      setFailedQuestions(loadedData.failedQuestions);
+      setQuestionCount(loadedData.questionCount);
+      setUiBlocked(false);
+    });
   }, []);
 
-  const persistFailedQuestions = useCallback((questions: FailedQuestion[]) => {
-    localStorage.setItem(FAILED_STORAGE_KEY, JSON.stringify(questions));
+  // Persist to localStorage AND Yandex cloud saves simultaneously
+  const persistData = useCallback((updates: {
+    solvedParagraphIds?: string[];
+    failedQuestions?: FailedQuestion[];
+    questionCount?: number;
+  }) => {
+    if (updates.solvedParagraphIds !== undefined) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updates.solvedParagraphIds));
+    }
+    if (updates.failedQuestions !== undefined) {
+      localStorage.setItem(FAILED_STORAGE_KEY, JSON.stringify(updates.failedQuestions));
+    }
+    if (updates.questionCount !== undefined) {
+      localStorage.setItem(QUESTION_COUNT_KEY, String(updates.questionCount));
+    }
+
+    const player = getPlayerInstance();
+    if (player) {
+      player.setData(updates, true).catch((e) =>
+        console.error('Yandex cloud save failed:', e)
+      );
+    }
   }, []);
 
   const startNewRound = useCallback(async () => {
@@ -77,7 +188,7 @@ const App: React.FC = () => {
       }
       const nextCount = questionCount + 1;
       setQuestionCount(nextCount);
-      localStorage.setItem(QUESTION_COUNT_KEY, String(nextCount));
+      persistData({ questionCount: nextCount });
       setIsOpenQuestion(nextCount % 5 === 0);
       setCurrentQuestion(question);
       setStatus(GameStatus.PLAYING);
@@ -86,10 +197,22 @@ const App: React.FC = () => {
       setError("Не удалось связаться с литературными архивами. Пожалуйста, попробуйте снова.");
       setStatus(GameStatus.IDLE);
     }
-  }, [solvedParagraphIds, failedQuestions, questionCount]);
+  }, [solvedParagraphIds, failedQuestions, questionCount, persistData]);
+
+  // Called when user clicks "Войти в библиотеку" — signals gameplay start to Yandex
+  const handleEnterLibrary = useCallback(() => {
+    const ysdk = getSDK();
+    if (ysdk) {
+      try { ysdk.features.GameplayAPI.start(); } catch { /* ignore if unavailable */ }
+    }
+    startNewRound();
+  }, [startNewRound]);
 
   const handleSelect = (book: Book) => {
     if (status !== GameStatus.PLAYING || !currentQuestion) return;
+
+    selectionCountRef.current += 1;
+    const shouldShowAd = selectionCountRef.current % 4 === 0;
 
     setSelectedBook(book);
     const isCorrect = book.id === currentQuestion.correctBook.id;
@@ -102,63 +225,87 @@ const App: React.FC = () => {
       setSolvedParagraphIds((prev) => {
         if (prev.includes(currentQuestion.paragraphId)) return prev;
         const next = [...prev, currentQuestion.paragraphId];
-        persistSolvedParagraphIds(next);
+        persistData({ solvedParagraphIds: next });
         return next;
       });
-      // Удалить из проваленных, если вопрос был там
+      // Remove from failed list if it was there
       setFailedQuestions((prev) => {
         const filtered = prev.filter((f) => f.paragraphId !== currentQuestion.paragraphId);
         if (filtered.length !== prev.length) {
-          persistFailedQuestions(filtered);
+          persistData({ failedQuestions: filtered });
         }
         return filtered;
       });
     } else {
       setStreak(0);
-      // Добавить или обновить в проваленных с новой датой
+      // Add or update in failed list with a new timestamp
       setFailedQuestions((prev) => {
         const now = Date.now();
         const existing = prev.find((f) => f.paragraphId === currentQuestion.paragraphId);
         let next: FailedQuestion[];
         if (existing) {
-          // Обновить дату провала
           next = prev.map((f) =>
             f.paragraphId === currentQuestion.paragraphId
               ? { ...f, failedAt: now }
               : f
           );
         } else {
-          // Добавить новый провал
           next = [...prev, { paragraphId: currentQuestion.paragraphId, failedAt: now }];
         }
-        persistFailedQuestions(next);
+        persistData({ failedQuestions: next });
         return next;
       });
     }
 
     setStatus(GameStatus.RESULT);
+
+    // Show fullscreen ad every 4th book selection
+    if (shouldShowAd) {
+      const ysdk = getSDK();
+      if (ysdk) {
+        try {
+          ysdk.features.GameplayAPI.stop();
+          ysdk.adv.showFullscreenAdv({
+            callbacks: {
+              onClose: () => {
+                try { ysdk.features.GameplayAPI.start(); } catch { /* ignore */ }
+              },
+              onError: () => {
+                try { ysdk.features.GameplayAPI.start(); } catch { /* ignore */ }
+              },
+            },
+          });
+        } catch { /* ignore if adv unavailable */ }
+      }
+    }
   };
 
   const resetProgress = useCallback(() => {
     setSolvedParagraphIds([]);
-    persistSolvedParagraphIds([]);
     setFailedQuestions([]);
-    persistFailedQuestions([]);
     setQuestionCount(0);
-    localStorage.setItem(QUESTION_COUNT_KEY, "0");
+    persistData({ solvedParagraphIds: [], failedQuestions: [], questionCount: 0 });
     setIsOpenQuestion(false);
     setScore(0);
     setStreak(0);
     setSelectedBook(null);
     setCurrentQuestion(null);
     setStatus(GameStatus.IDLE);
-  }, [persistSolvedParagraphIds, persistFailedQuestions]);
+  }, [persistData]);
 
   const isSelected = (book: Book) => selectedBook?.id === book.id;
   const isCorrect = (book: Book) => currentQuestion?.correctBook.id === book.id;
 
   return (
     <Layout>
+      {/* Interaction blocker overlay — active while SDK is initialising */}
+      {uiBlocked && (
+        <div
+          className="fixed inset-0 z-[9999]"
+          style={{ pointerEvents: 'all', cursor: 'wait' }}
+        />
+      )}
+
       {status === GameStatus.IDLE && (
         <div className="bg-white p-8 rounded-3xl shadow-xl border border-stone-100 text-center max-w-xl mx-auto">
           <div className="w-20 h-20 bg-amber-50 text-amber-700 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6 shadow-inner">
@@ -171,7 +318,7 @@ const App: React.FC = () => {
             Точность важна, а серии правильных ответов приносят бонусные очки.
           </p>
           <button
-            onClick={startNewRound}
+            onClick={handleEnterLibrary}
             className="w-full bg-stone-800 hover:bg-stone-900 text-white font-bold py-4 px-8 rounded-2xl transition-all shadow-lg hover:shadow-xl active:scale-95"
           >
             Войти в библиотеку

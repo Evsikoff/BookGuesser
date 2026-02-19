@@ -2,9 +2,58 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap');
 
+/* Prevent system scrollbar and pull-to-refresh */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  touch-action: pan-x pan-y;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background-color: #f8f5f0;
+}
+
+/* Internal scrollable container */
+#root {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+
+/* Styled scrollbar for WebKit browsers */
+#root::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+#root::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: #f0ebe3;
+  border-radius: 3px;
+}
+
+#root::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background: #c4a882;
+  border-radius: 3px;
+}
+
+#root::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+  background: #92400e;
+}
+
+/* Firefox scrollbar */
+#root,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c4a882 #f0ebe3;
 }
 
 .serif {
