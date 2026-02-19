@@ -5,11 +5,19 @@ export interface Book {
   author: string;
 }
 
+export enum Difficulty {
+  VERY_EASY = 'VERY_EASY',
+  EASY = 'EASY',
+  MEDIUM = 'MEDIUM',
+  HARD = 'HARD'
+}
+
 export interface Paragraph {
   id: string;
   text: string;
   bookId: string;
   distractorBookIds: string[];
+  difficulty: Difficulty;
 }
 
 export interface Question {
@@ -17,6 +25,7 @@ export interface Question {
   paragraph: string;
   correctBook: Book;
   options: Book[];
+  difficulty: Difficulty;
 }
 
 export interface FailedQuestion {

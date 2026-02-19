@@ -1,4 +1,4 @@
-import { Paragraph } from "../types";
+import { Paragraph, Difficulty } from "../types";
 
 export const paragraphs: Paragraph[] = [
   {
@@ -25,7 +25,8 @@ export const paragraphs: Paragraph[] = [
       "b18",
       "b19",
       "b20"
-    ]
+    ],
+    difficulty: Difficulty.VERY_EASY
   },
   {
     id: "p2",
@@ -51,7 +52,8 @@ export const paragraphs: Paragraph[] = [
       "b30",
       "b31",
       "b32"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p3",
@@ -77,7 +79,8 @@ export const paragraphs: Paragraph[] = [
       "b47",
       "b48",
       "b49"
-    ]
+    ],
+    difficulty: Difficulty.VERY_EASY
   },
   {
     id: "p4",
@@ -103,7 +106,8 @@ export const paragraphs: Paragraph[] = [
       "b5",
       "b19",
       "b53"
-    ]
+    ],
+    difficulty: Difficulty.VERY_EASY
   },
   {
     id: "p5",
@@ -129,7 +133,8 @@ export const paragraphs: Paragraph[] = [
       "b71",
       "b72",
       "b73"
-    ]
+    ],
+    difficulty: Difficulty.EASY
   },
   {
     id: "p6",
@@ -155,7 +160,8 @@ export const paragraphs: Paragraph[] = [
       "b68",
       "b67",
       "b86"
-    ]
+    ],
+    difficulty: Difficulty.VERY_EASY
   },
   {
     id: "p7",
@@ -181,7 +187,8 @@ export const paragraphs: Paragraph[] = [
       "b99",
       "b100",
       "b101"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p8",
@@ -207,7 +214,8 @@ export const paragraphs: Paragraph[] = [
       "b19",
       "b4",
       "b23"
-    ]
+    ],
+    difficulty: Difficulty.EASY
   },
   {
     id: "p9",
@@ -233,7 +241,8 @@ export const paragraphs: Paragraph[] = [
       "b127",
       "b100",
       "b128"
-    ]
+    ],
+    difficulty: Difficulty.VERY_EASY
   },
   {
     id: "p10",
@@ -259,7 +268,8 @@ export const paragraphs: Paragraph[] = [
       "b65",
       "b66",
       "b138"
-    ]
+    ],
+    difficulty: Difficulty.VERY_EASY
   },
   {
     id: "p11",
@@ -285,7 +295,8 @@ export const paragraphs: Paragraph[] = [
       "b115",
       "b120",
       "b121"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p12",
@@ -311,7 +322,8 @@ export const paragraphs: Paragraph[] = [
       "b125",
       "b130",
       "b134"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p13",
@@ -337,7 +349,8 @@ export const paragraphs: Paragraph[] = [
       "b131",
       "b136",
       "b143"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p14",
@@ -363,7 +376,8 @@ export const paragraphs: Paragraph[] = [
       "b42",
       "b57",
       "b68"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p15",
@@ -389,7 +403,8 @@ export const paragraphs: Paragraph[] = [
       "b63",
       "b72",
       "b84"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p16",
@@ -415,7 +430,8 @@ export const paragraphs: Paragraph[] = [
       "b138",
       "b140",
       "b143"
-    ]
+    ],
+    difficulty: Difficulty.VERY_EASY
   },
   {
     id: "p17",
@@ -441,7 +457,8 @@ export const paragraphs: Paragraph[] = [
       "b133",
       "b135",
       "b140"
-    ]
+    ],
+    difficulty: Difficulty.EASY
   },
   {
     id: "p18",
@@ -467,7 +484,8 @@ export const paragraphs: Paragraph[] = [
       "b117",
       "b126",
       "b127"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p19",
@@ -493,7 +511,8 @@ export const paragraphs: Paragraph[] = [
       "b138",
       "b138",
       "b140"
-    ]
+    ],
+    difficulty: Difficulty.EASY
   },
   {
     id: "p20",
@@ -519,7 +538,8 @@ export const paragraphs: Paragraph[] = [
       "b91",
       "b113",
       "b122"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p21",
@@ -545,7 +565,8 @@ export const paragraphs: Paragraph[] = [
       "b135",
       "b141",
       "b143"
-    ]
+    ],
+    difficulty: Difficulty.EASY
   },
   {
     id: "p22",
@@ -571,7 +592,8 @@ export const paragraphs: Paragraph[] = [
       "b69",
       "b71",
       "b92"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p23",
@@ -597,7 +619,8 @@ export const paragraphs: Paragraph[] = [
       "b128",
       "b131",
       "b138"
-    ]
+    ],
+    difficulty: Difficulty.VERY_EASY
   },
   {
     id: "p24",
@@ -623,7 +646,8 @@ export const paragraphs: Paragraph[] = [
       "b110",
       "b116",
       "b118"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p25",
@@ -649,7 +673,8 @@ export const paragraphs: Paragraph[] = [
       "b106",
       "b109",
       "b116"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p26",
@@ -675,7 +700,8 @@ export const paragraphs: Paragraph[] = [
       "b105",
       "b113",
       "b139"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p27",
@@ -701,7 +727,8 @@ export const paragraphs: Paragraph[] = [
       "b124",
       "b138",
       "b139"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p28",
@@ -727,7 +754,8 @@ export const paragraphs: Paragraph[] = [
       "b63",
       "b64",
       "b110"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p29",
@@ -753,7 +781,8 @@ export const paragraphs: Paragraph[] = [
       "b106",
       "b116",
       "b121"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p30",
@@ -779,7 +808,8 @@ export const paragraphs: Paragraph[] = [
       "b124",
       "b128",
       "b138"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p31",
@@ -805,7 +835,8 @@ export const paragraphs: Paragraph[] = [
       "b92",
       "b93",
       "b115"
-    ]
+    ],
+    difficulty: Difficulty.EASY
   },
   {
     id: "p32",
@@ -831,7 +862,8 @@ export const paragraphs: Paragraph[] = [
       "b117",
       "b140",
       "b143"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p33",
@@ -857,7 +889,8 @@ export const paragraphs: Paragraph[] = [
       "b139",
       "b142",
       "b143"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p34",
@@ -883,7 +916,8 @@ export const paragraphs: Paragraph[] = [
       "b116",
       "b122",
       "b139"
-    ]
+    ],
+    difficulty: Difficulty.VERY_EASY
   },
   {
     id: "p35",
@@ -909,7 +943,8 @@ export const paragraphs: Paragraph[] = [
       "b126",
       "b141",
       "b142"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p36",
@@ -935,7 +970,8 @@ export const paragraphs: Paragraph[] = [
       "b125",
       "b127",
       "b128"
-    ]
+    ],
+    difficulty: Difficulty.EASY
   },
   {
     id: "p37",
@@ -961,7 +997,8 @@ export const paragraphs: Paragraph[] = [
       "b138",
       "b142",
       "b145"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p38",
@@ -987,7 +1024,8 @@ export const paragraphs: Paragraph[] = [
       "b139",
       "b141",
       "b142"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p39",
@@ -1013,7 +1051,8 @@ export const paragraphs: Paragraph[] = [
       "b119",
       "b124",
       "b130"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p40",
@@ -1039,7 +1078,8 @@ export const paragraphs: Paragraph[] = [
       "b134",
       "b143",
       "b145"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p41",
@@ -1065,7 +1105,8 @@ export const paragraphs: Paragraph[] = [
       "b141",
       "b144",
       "b145"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p42",
@@ -1091,7 +1132,8 @@ export const paragraphs: Paragraph[] = [
       "b138",
       "b139",
       "b146"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p43",
@@ -1117,7 +1159,8 @@ export const paragraphs: Paragraph[] = [
       "b110",
       "b111",
       "b120"
-    ]
+    ],
+    difficulty: Difficulty.EASY
   },
   {
     id: "p44",
@@ -1143,7 +1186,8 @@ export const paragraphs: Paragraph[] = [
       "b62",
       "b68",
       "b72"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p45",
@@ -1169,7 +1213,8 @@ export const paragraphs: Paragraph[] = [
       "b37",
       "b51",
       "b84"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p46",
@@ -1195,7 +1240,8 @@ export const paragraphs: Paragraph[] = [
       "b129",
       "b135",
       "b148"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p47",
@@ -1221,7 +1267,8 @@ export const paragraphs: Paragraph[] = [
       "b120",
       "b133",
       "b142"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p48",
@@ -1247,7 +1294,8 @@ export const paragraphs: Paragraph[] = [
       "b106",
       "b110",
       "b147"
-    ]
+    ],
+    difficulty: Difficulty.VERY_EASY
   },
   {
     id: "p49",
@@ -1273,7 +1321,8 @@ export const paragraphs: Paragraph[] = [
       "b134",
       "b138",
       "b139"
-    ]
+    ],
+    difficulty: Difficulty.EASY
   },
   {
     id: "p50",
@@ -1299,7 +1348,8 @@ export const paragraphs: Paragraph[] = [
       "b131",
       "b142",
       "b146"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p51",
@@ -1325,7 +1375,8 @@ export const paragraphs: Paragraph[] = [
       "b123",
       "b129",
       "b143"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p52",
@@ -1351,7 +1402,8 @@ export const paragraphs: Paragraph[] = [
       "b64",
       "b101",
       "b116"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p53",
@@ -1377,7 +1429,8 @@ export const paragraphs: Paragraph[] = [
       "b138",
       "b141",
       "b142"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p54",
@@ -1403,7 +1456,8 @@ export const paragraphs: Paragraph[] = [
       "b96",
       "b100",
       "b136"
-    ]
+    ],
+    difficulty: Difficulty.EASY
   },
   {
     id: "p55",
@@ -1429,7 +1483,8 @@ export const paragraphs: Paragraph[] = [
       "b130",
       "b136",
       "b148"
-    ]
+    ],
+    difficulty: Difficulty.EASY
   },
   {
     id: "p56",
@@ -1455,7 +1510,8 @@ export const paragraphs: Paragraph[] = [
       "b121",
       "b144",
       "b151"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p57",
@@ -1481,7 +1537,8 @@ export const paragraphs: Paragraph[] = [
       "b111",
       "b113",
       "b130"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p58",
@@ -1507,7 +1564,8 @@ export const paragraphs: Paragraph[] = [
       "b111",
       "b116",
       "b121"
-    ]
+    ],
+    difficulty: Difficulty.MEDIUM
   },
   {
     id: "p59",
@@ -1533,7 +1591,8 @@ export const paragraphs: Paragraph[] = [
       "b101",
       "b113",
       "b115"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p60",
@@ -1559,7 +1618,8 @@ export const paragraphs: Paragraph[] = [
       "b132",
       "b148",
       "b149"
-    ]
+    ],
+    difficulty: Difficulty.HARD
   },
   {
     id: "p61",
@@ -1585,6 +1645,7 @@ export const paragraphs: Paragraph[] = [
       "b114",
       "b116",
       "b117"
-    ]
-  }
+    ],
+    difficulty: Difficulty.HARD
+  },
 ];
