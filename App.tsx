@@ -3,8 +3,23 @@ import { Layout } from './components/Layout';
 import { BookOption } from './components/BookOption';
 import { BookAutocomplete } from './components/BookAutocomplete';
 import { fetchBookQuestion } from './services/geminiService';
-import { Question, Book, GameStatus, FailedQuestion } from './types';
+import { Question, Book, GameStatus, FailedQuestion, Difficulty } from './types';
 import { paragraphs } from './data/paragraphs';
+
+const DIFFICULTY_LABELS: Record<Difficulty, string> = {
+  [Difficulty.VERY_EASY]: 'Очень легкий',
+  [Difficulty.EASY]: 'Легкий',
+  [Difficulty.MEDIUM]: 'Средний',
+  [Difficulty.HARD]: 'Сложный',
+};
+
+const DIFFICULTY_COLORS: Record<Difficulty, string> = {
+  [Difficulty.VERY_EASY]: 'bg-green-500',
+  [Difficulty.EASY]: 'bg-blue-500',
+  [Difficulty.MEDIUM]: 'bg-orange-500',
+  [Difficulty.HARD]: 'bg-red-600',
+};
+
 import { initYSDK, initPlayer, getSDK, getPlayerInstance } from './services/ysdkService';
 
 const STORAGE_KEY = "bookguesser.correctParagraphIds";
@@ -189,7 +204,10 @@ const App: React.FC = () => {
       const nextCount = questionCount + 1;
       setQuestionCount(nextCount);
       persistData({ questionCount: nextCount });
-      setIsOpenQuestion(nextCount % 5 === 0);
+      setIsOpenQuestion(
+        question.difficulty === Difficulty.VERY_EASY ||
+        question.difficulty === Difficulty.EASY
+      );
       setCurrentQuestion(question);
       setStatus(GameStatus.PLAYING);
     } catch (err) {
@@ -383,12 +401,18 @@ const App: React.FC = () => {
           </div>
 
           <div className={`p-8 sm:p-12 rounded-3xl shadow-lg relative overflow-hidden group ${isOpenQuestion ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200' : 'bg-white border border-stone-100'}`}>
-            {isOpenQuestion && (
-              <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1 bg-amber-500 text-white rounded-full text-xs font-bold shadow-md">
-                <i className="fa-solid fa-lightbulb"></i>
-                <span>ОТКРЫТЫЙ ВОПРОС</span>
+            <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-20">
+              {isOpenQuestion && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-amber-500 text-white rounded-full text-xs font-bold shadow-md">
+                  <i className="fa-solid fa-lightbulb"></i>
+                  <span>ОТКРЫТЫЙ ВОПРОС</span>
+                </div>
+              )}
+              <div className={`flex items-center gap-2 px-3 py-1 ${DIFFICULTY_COLORS[currentQuestion.difficulty]} text-white rounded-full text-xs font-bold shadow-md`}>
+                <i className="fa-solid fa-layer-group"></i>
+                <span>{DIFFICULTY_LABELS[currentQuestion.difficulty]}</span>
               </div>
-            )}
+            </div>
             <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none transition-transform group-hover:scale-110 duration-700">
               <i className={`fa-solid ${isOpenQuestion ? 'fa-brain' : 'fa-quote-right'} text-9xl`}></i>
             </div>

@@ -29,7 +29,8 @@ function buildQuestion(paragraphId: string): Question {
     paragraphId: paragraph.id,
     paragraph: paragraph.text,
     correctBook,
-    options
+    options,
+    difficulty: paragraph.difficulty
   };
 }
 
