@@ -642,7 +642,7 @@ const App: React.FC = () => {
                     )}
                   </div>
                   <button
-                    onClick={startNewRound}
+                    onClick={() => startNewRound()}
                     className="w-full sm:w-auto bg-stone-800 hover:bg-stone-900 text-white font-bold py-3 px-12 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-95"
                   >
                     Следующий отрывок
